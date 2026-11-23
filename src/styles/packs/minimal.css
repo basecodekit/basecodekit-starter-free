@@ -1,0 +1,8 @@
+/*
+ * Minimal — clean monochrome, crisp type, subtle interactions. Follows the
+ * visitor's light/dark preference. The colors are the token defaults; the
+ * pack tightens geometry so edges read crisp.
+ */
+[data-style-pack="minimal"] {
+  --radius: 0.375rem;
+}

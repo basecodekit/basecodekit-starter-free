@@ -1,0 +1,178 @@
+/* Packs come after tokens, so a pack's overrides always win — whatever the
+ * selectors' specificity or the files' order. `brand` (siteConfig.brand,
+ * injected by the root layout) comes last, so a whitelabel color wins over
+ * every pack. */
+@layer tokens, packs, brand;
+@import "tailwindcss";
+@import "../styles/packs/minimal.css" layer(packs);
+
+/*
+ * Design tokens (Phase 5). Components use only the semantic utilities these
+ * generate — `bg-background`, `text-muted-foreground`, `bg-primary`,
+ * `border-input`, `rounded-lg`, `backdrop-blur-surface`, … — never raw
+ * palette classes like `zinc-950` or `dark:` color pairs. A style pack
+ * restyles the whole app by overriding the variables below, never by
+ * touching component markup.
+ *
+ * Names follow shadcn/ui's convention, so shadcn components drop in as-is.
+ *
+ * Defaults are declared on `:root` and again on every `[data-style-pack]`
+ * root, so a pack scoped to a subtree (e.g. `/dev/preview`) starts from the
+ * defaults instead of inheriting its parent pack's colors.
+ */
+
+@layer tokens {
+  :root,
+  [data-style-pack] {
+    --radius: 0.5rem;
+
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.47 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.55 0.22 27);
+    --success: oklch(0.5 0.13 150);
+    --success-muted: oklch(0.96 0.04 150);
+    --warning: oklch(0.55 0.13 70);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.85 0 0);
+    --ring: oklch(0.708 0 0);
+
+    /* Glass/elevation knobs — inert by default, for packs with translucent surfaces. */
+    --surface-blur: 0px;
+    --card-shadow: none;
+    --page-glow: none;
+
+    /* `none` hides the light/dark switch, for a pack that is always one theme. */
+    --theme-switch-display: flex;
+
+    --font-body: var(--font-geist-sans);
+    --heading-font: var(--font-geist-sans);
+    --font-code: var(--font-geist-mono);
+
+    color-scheme: light;
+  }
+
+  /* Dark: follows the visitor's system preference, unless an ancestor sets
+   * `data-theme`. `data-theme="light"`/`"dark"` forces a theme for its whole
+   * subtree, including any `[data-style-pack]` root inside it (the previews'
+   * theme switch, and the visitor's choice in the account menu, set on
+   * `<html>` by `core/theme`). An inner `data-theme="light"` wins over an
+   * outer dark one. The two dark blocks must stay identical; a test checks. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]),
+    [data-style-pack]:not([data-theme="light"], [data-theme="light"] *) {
+      --background: oklch(0.145 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.18 0 0);
+      --primary: oklch(0.922 0 0);
+      --primary-foreground: oklch(0.205 0 0);
+      --secondary: oklch(0.269 0 0);
+      --secondary-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.269 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --accent: oklch(0.269 0 0);
+      --accent-foreground: oklch(0.985 0 0);
+      --destructive: oklch(0.7 0.19 22);
+      --success: oklch(0.75 0.15 150);
+      --success-muted: oklch(0.28 0.06 150);
+      --warning: oklch(0.8 0.14 75);
+      --border: oklch(1 0 0 / 10%);
+      --input: oklch(1 0 0 / 18%);
+      --ring: oklch(0.556 0 0);
+
+      color-scheme: dark;
+    }
+  }
+
+  [data-theme="dark"],
+  [data-theme="dark"] [data-style-pack]:not([data-theme="light"], [data-theme="light"] *) {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.18 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.7 0.19 22);
+    --success: oklch(0.75 0.15 150);
+    --success-muted: oklch(0.28 0.06 150);
+    --warning: oklch(0.8 0.14 75);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 18%);
+    --ring: oklch(0.556 0 0);
+
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --blur-surface: var(--surface-blur);
+  --shadow-card: var(--card-shadow);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--heading-font);
+  --font-mono: var(--font-code);
+}
+
+/* Decorative page background (gradients/glows) — `none` unless a pack sets it. */
+@utility bg-page-glow {
+  background-image: var(--page-glow);
+}
+
+/* Raw tokens here, not Tailwind's `--color-*` theme variables: those are
+ * declared on `:root`, so they'd resolve against <html>'s pack and leak it
+ * into any subtree scoped to a different pack. */
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+  }
+}
