@@ -22,3 +22,21 @@ export function resolveAppUrl(env: NodeJS.ProcessEnv): string {
   }
   return "http://localhost:3355";
 }
+
+/**
+ * `DATABASE_URL` is the pooled connection the app runs on; `DIRECT_URL` is
+ * the unpooled one, for migrations only. On a serverless host every
+ * invocation opens its own connections, so running on the direct one
+ * exhausts Postgres' connection limit under real traffic ("too many
+ * connections"). Refuses to start there when the two are the same.
+ * Long-running servers (Docker, a VPS) may use one database URL for both.
+ */
+export function assertPooledDatabaseUrl(env: NodeJS.ProcessEnv): void {
+  const serverless = Boolean(env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME || env.NETLIFY);
+  if (serverless && env.DIRECT_URL && env.DATABASE_URL === env.DIRECT_URL) {
+    throw new Error(
+      "DATABASE_URL is the same as DIRECT_URL on a serverless host. Set DATABASE_URL to your database's pooled " +
+        "connection string (Supabase: the pooler on port 6543) and keep DIRECT_URL for migrations.",
+    );
+  }
+}

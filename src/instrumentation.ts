@@ -12,6 +12,11 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") {
     return;
   }
+  // A serverless deploy on the unpooled database URL stops here instead of
+  // failing with "too many connections" under load.
+  const { assertPooledDatabaseUrl } = await import("@/lib/env");
+  assertPooledDatabaseUrl(process.env);
+
   // Same for siteConfig.brand: a bad color or logo URL stops the server.
   const { brand } = await import("@/core/brand");
   for (const warning of brand.warnings) console.warn(`[brand] ${warning}`);

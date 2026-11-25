@@ -27,6 +27,18 @@ bun run dev                  # http://localhost:3355
 
 Optional: `bun run db:seed` creates a demo organization and its owner, who signs in as `owner@example.com` / `seed-owner-password-1!`.
 
+### Run the whole app in Docker
+
+If you picked the local Docker database, `docker-compose.yml` also has an `app` service, built from the `Dockerfile` in production mode. Run the migrations from your machine first (as above), then:
+
+```bash
+docker compose --profile app up -d --build  # app on http://localhost:3355, talking to the postgres service
+docker compose --profile app logs -f app    # follow its output
+docker compose --profile app down           # stop both
+```
+
+Without `--profile app`, `docker compose up -d` starts only Postgres, for `bun run dev`. Stop `bun run dev` before starting the app container, because both use port 3355.
+
 ## Where things live
 
 - `src/app/`: routes (landing page, auth pages, dashboard, API).
@@ -65,7 +77,7 @@ Styling goes through semantic tokens only (`bg-background`, `text-muted-foregrou
 
 ## Deploy
 
-It is a standard Next.js app (`bun run build`, then `bun run start`), so it runs on Vercel or on any server that runs Node or Docker. On each environment:
+It is a standard Next.js app (`bun run build`, then `bun run start`), so it runs on Vercel or on any server that runs Node or Docker. For Docker, the `Dockerfile` builds a production image: `docker build -t my-app .`, then run it with the variables below, for example `docker run -p 3355:3355 --env-file .env.production my-app`. On each environment:
 
 1. Create a Postgres database and set `DATABASE_URL`.
 2. Set `BETTER_AUTH_URL` to the public origin, e.g. `https://yourapp.com`. Production refuses to start without it, and passkeys are tied to it (see above).

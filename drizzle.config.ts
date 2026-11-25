@@ -26,7 +26,10 @@ export default defineConfig({
     "./src/db/schema/org.ts",
   ],
   out: "./drizzle",
+  // Migrations take the direct connection: a transaction-mode pooler (such as
+  // Supabase's on port 6543) can't run them. Falls back to DATABASE_URL where
+  // there is no pooler and both are the same database.
   dbCredentials: {
-    url: process.env.DATABASE_URL as string,
+    url: (process.env.DIRECT_URL || process.env.DATABASE_URL) as string,
   },
 });

@@ -74,6 +74,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // The Dockerfile sets this to get a self-contained server with only the
+  // files it needs. Left off otherwise, since `next start` warns with it on.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   async headers() {
     return [
       {
