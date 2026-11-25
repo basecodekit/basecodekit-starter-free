@@ -38,7 +38,7 @@ export async function DELETE(request: Request) {
   if (!user) {
     return Response.json({ error: "Not signed in." }, { status: 401 });
   }
-  if (!checkRateLimit(`account-delete:${user.id}`, DELETE_RATE_LIMIT.windowMs, DELETE_RATE_LIMIT.max)) {
+  if (!(await checkRateLimit(`account-delete:${user.id}`, DELETE_RATE_LIMIT.windowMs, DELETE_RATE_LIMIT.max))) {
     return Response.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 

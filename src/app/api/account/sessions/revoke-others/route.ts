@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ error: "Not signed in." }, { status: 401 });
   }
-  if (!checkRateLimit(`account-sessions:${user.id}`, RATE_LIMIT.windowMs, RATE_LIMIT.max)) {
+  if (!(await checkRateLimit(`account-sessions:${user.id}`, RATE_LIMIT.windowMs, RATE_LIMIT.max))) {
     return Response.json({ error: "Too many requests. Try again shortly." }, { status: 429 });
   }
 

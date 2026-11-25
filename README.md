@@ -77,11 +77,20 @@ Styling goes through semantic tokens only (`bg-background`, `text-muted-foregrou
 
 ## Deploy
 
-It is a standard Next.js app (`bun run build`, then `bun run start`), so it runs on Vercel or on any server that runs Node or Docker. For Docker, the `Dockerfile` builds a production image: `docker build -t my-app .`, then run it with the variables below, for example `docker run -p 3355:3355 --env-file .env.production my-app`. On each environment:
+It is a standard Next.js app (`bun run build`, then `bun run start`), so it runs on Vercel or on any server that runs Node or Docker. For Docker, the `Dockerfile` builds a production image: `docker build -t my-app .`, then run it with the variables below, for example `docker run -p 127.0.0.1:3355:3355 --env-file .env.production my-app`. On each environment:
 
 1. Create a Postgres database and set `DATABASE_URL`.
 2. Set `BETTER_AUTH_URL` to the public origin, e.g. `https://yourapp.com`. Production refuses to start without it, and passkeys are tied to it (see above).
 3. Set a new `BETTER_AUTH_SECRET` (`openssl rand -base64 32`); never reuse the dev one.
 4. Run the migrations against that database before the first start.
 5. Set `RESEND_API_KEY` and an `EMAIL_FROM` on a domain verified in Resend, plus any OAuth, R2 and Sentry variables you use. OAuth apps need the production callback URL `https://yourapp.com/api/auth/callback/<provider>`.
-6. Serve it over HTTPS.
+6. Serve it over HTTPS. On your own server, put a reverse proxy in front and keep the app's port private (`127.0.0.1:3355`, as above; Docker's published ports bypass firewalls such as ufw). The proxy must **replace** `X-Forwarded-For` with the client's address, not append to it: sign-in rate limits are per IP, and an appended, client-supplied value would put every visitor in one shared bucket. With nginx:
+   ```nginx
+   location / {
+       proxy_pass http://127.0.0.1:3355;
+       proxy_set_header Host $host;
+       proxy_set_header X-Forwarded-For $remote_addr;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       proxy_set_header X-Request-Id $request_id;
+   }
+   ```

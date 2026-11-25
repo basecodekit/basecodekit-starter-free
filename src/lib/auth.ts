@@ -2,10 +2,10 @@ import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { magicLink, twoFactor } from "better-auth/plugins";
 import { passkey } from "@better-auth/passkey";
-import { Pool } from "pg";
 import { authConfig } from "@/config/auth.config";
 import { siteConfig } from "@/config/site.config";
 import { sendChangeEmailApproval, sendMagicLinkEmail, sendVerifyEmail } from "@/lib/email";
+import { authPool } from "@/lib/auth-pool";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { APP_URL } from "@/lib/env";
 
@@ -34,9 +34,7 @@ export const auth = betterAuth({
   // set explicitly to the site's own name for that label to be consistent
   // with the issuer `twoFactor()` below uses on initial enrollment.
   appName: siteConfig.name,
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
+  database: authPool,
   // Better Auth limits sign-in, sign-up and password reset per client IP in
   // production. Its default store is in memory, which each serverless
   // instance keeps separately; the `rateLimit` table is shared by all of them.
@@ -150,7 +148,7 @@ export const auth = betterAuth({
       if (ctx.path === "/change-email") {
         const session = await getSessionFromCtx(ctx);
         if (!session) return;
-        if (!checkRateLimit(`change-email:${session.user.id}`, CHANGE_EMAIL_RATE_LIMIT.windowMs, CHANGE_EMAIL_RATE_LIMIT.max)) {
+        if (!(await checkRateLimit(`change-email:${session.user.id}`, CHANGE_EMAIL_RATE_LIMIT.windowMs, CHANGE_EMAIL_RATE_LIMIT.max))) {
           throw new APIError("TOO_MANY_REQUESTS", { message: "Too many email changes. Try again later." });
         }
         return;
@@ -161,7 +159,7 @@ export const auth = betterAuth({
       const email = typeof ctx.body?.email === "string" ? ctx.body.email.toLowerCase() : undefined;
       if (!email) return;
 
-      const allowed = checkRateLimit(
+      const allowed = await checkRateLimit(
         `magic-link:${email}`,
         MAGIC_LINK_RATE_LIMIT.windowMs,
         MAGIC_LINK_RATE_LIMIT.max,
